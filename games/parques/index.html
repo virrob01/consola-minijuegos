@@ -335,6 +335,13 @@ function cellPx(row, col) {
   return { x: col * CELL + CELL / 2, y: row * CELL + CELL / 2 };
 }
 
+// El tablero se encoge en pantallas pequeñas: se posiciona en % del tamaño
+// de referencia (15 * CELL) para que las fichas sigan a las casillas.
+function toPct(v, offPx = 0) {
+  const pct = (v / (15 * CELL)) * 100;
+  return offPx ? `calc(${pct}% + ${offPx}px)` : `${pct}%`;
+}
+
 function getCellCoordForStep(color, step) {
   if (step >= 1 && step <= 51) {
     const idx = (COLORS_CFG[color].start + step - 1) % 52;
@@ -478,8 +485,8 @@ function renderPawns() {
       const off = list.length === 1 ? [0, 0] : TOKEN_OFFSETS[k % TOKEN_OFFSETS.length];
       const tok = ensurePawnElement(item.color, item.pawnIdx);
       if (!tok.isConnected) tokensLayer.appendChild(tok);
-      tok.style.left = `${x + off[0]}px`;
-      tok.style.top = `${y + off[1]}px`;
+      tok.style.left = toPct(x, off[0]);
+      tok.style.top = toPct(y, off[1]);
     });
   });
 
