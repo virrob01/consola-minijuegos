@@ -107,6 +107,10 @@
     width: 100%;
     max-width: 520px;
   }
+  /* Solo en celulares: menos separación para que quepan 6 columnas */
+  @media (max-width: 560px) {
+    #board[data-cols="6"] { --gap: 6px; }
+  }
   .card {
     position: relative;
     width: 100%;
@@ -406,7 +410,7 @@ function buildBoard() {
   // Columnas flexibles (máx. 78px) para que el tablero quepa en celulares
   board.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 78px))`;
   board.style.setProperty('--cols', cols);
-  board.style.setProperty('--gap', cols >= 6 ? '6px' : '10px');
+  board.dataset.cols = cols;
   board.innerHTML = '';
 
   deck.forEach(card => {
