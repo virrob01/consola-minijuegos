@@ -20,12 +20,27 @@
     margin: 0;
     min-height: 100vh;
     font-family: 'Segoe UI', system-ui, sans-serif;
-    background: radial-gradient(circle at 20% 15%, var(--bg2), var(--bg1) 70%);
     color: var(--text);
     display: flex;
     flex-direction: column;
     align-items: center;
     padding: 48px 16px 60px;
+    position: relative;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(circle at 20% 15%, var(--bg2), var(--bg1) 70%);
+    animation: hueShift 240s linear infinite;
+  }
+  @keyframes hueShift {
+    from { filter: hue-rotate(0deg); }
+    to { filter: hue-rotate(360deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    body::before { animation: none; }
   }
   h1 {
     margin: 0;
@@ -156,12 +171,12 @@
     <span class="cta">▶ Jugar</span>
   </a>
 
-  <div class="game-card locked">
+  <a class="game-card available" href="games/buscaminas/index.html">
     <div class="icon">💣</div>
     <h2>Buscaminas</h2>
     <p>Encuentra todas las casillas seguras sin detonar ninguna mina.</p>
-    <span class="cta">Próximamente</span>
-  </div>
+    <span class="cta">▶ Jugar</span>
+  </a>
 
   <div class="game-card locked">
     <div class="icon">🐍</div>
