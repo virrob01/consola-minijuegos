@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consola de Minijuegos</title>
+<style>
+  :root {
+    --bg1: #1e1b4b;
+    --bg2: #4c1d95;
+    --accent: #f472b6;
+    --accent2: #a855f7;
+    --text: #f5f3ff;
+    --panel: rgba(255,255,255,0.06);
+    --panel-border: rgba(255,255,255,0.15);
+    --panel-hover: rgba(255,255,255,0.12);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: radial-gradient(circle at 20% 15%, var(--bg2), var(--bg1) 70%);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 16px 60px;
+  }
+  h1 {
+    margin: 0;
+    font-size: 2.4rem;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 16px rgba(244,114,182,0.5);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .subtitle {
+    opacity: 0.7;
+    margin: 10px 0 40px;
+    font-size: 0.95rem;
+    text-align: center;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .game-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 18px;
+    padding: 24px 20px;
+    text-decoration: none;
+    color: var(--text);
+    transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+    backdrop-filter: blur(6px);
+    overflow: hidden;
+  }
+  .game-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 0;
+  }
+  .game-card.available:hover {
+    transform: translateY(-4px);
+    background: var(--panel-hover);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
+  .game-card .icon {
+    font-size: 2.6rem;
+    margin-bottom: 14px;
+    position: relative;
+    z-index: 1;
+  }
+  .game-card h2 {
+    margin: 0 0 6px;
+    font-size: 1.25rem;
+    position: relative;
+    z-index: 1;
+  }
+  .game-card p {
+    margin: 0 0 18px;
+    font-size: 0.85rem;
+    opacity: 0.75;
+    line-height: 1.4;
+    position: relative;
+    z-index: 1;
+    flex-grow: 1;
+  }
+  .game-card .cta {
+    align-self: flex-start;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 10px;
+    position: relative;
+    z-index: 1;
+  }
+  .game-card.available .cta {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+  }
+  .game-card.locked {
+    cursor: default;
+    opacity: 0.55;
+  }
+  .game-card.locked .cta {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid var(--panel-border);
+  }
+
+  footer {
+    margin-top: 50px;
+    opacity: 0.4;
+    font-size: 0.75rem;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<h1>🕹️ Consola de Minijuegos</h1>
+<div class="subtitle">Elige un juego para empezar a jugar</div>
+
+<div class="grid">
+  <a class="game-card available" href="games/memoria/index.html">
+    <div class="icon">🧠</div>
+    <h2>Memoria</h2>
+    <p>Encuentra todas las parejas de cartas con el menor número de movimientos. Varios temas y niveles de dificultad.</p>
+    <span class="cta">▶ Jugar</span>
+  </a>
+
+  <a class="game-card available" href="games/serpientes-escaleras/index.html">
+    <div class="icon">🐍</div>
+    <h2>Serpientes y Escaleras</h2>
+    <p>El clásico juego de mesa: sube por escaleras, evita serpientes. Hasta 4 jugadores por turnos.</p>
+    <span class="cta">▶ Jugar</span>
+  </a>
+
+  <a class="game-card available" href="games/parques/index.html">
+    <div class="icon">🎲</div>
+    <h2>Parqués</h2>
+    <p>El clásico juego de mesa con dados: saca tus fichas de la cárcel y llévalas a la meta. Hasta 4 jugadores.</p>
+    <span class="cta">▶ Jugar</span>
+  </a>
+
+  <div class="game-card locked">
+    <div class="icon">💣</div>
+    <h2>Buscaminas</h2>
+    <p>Encuentra todas las casillas seguras sin detonar ninguna mina.</p>
+    <span class="cta">Próximamente</span>
+  </div>
+
+  <div class="game-card locked">
+    <div class="icon">🐍</div>
+    <h2>Serpiente</h2>
+    <p>El clásico juego de la serpiente: come, crece y no choques contigo mismo.</p>
+    <span class="cta">Próximamente</span>
+  </div>
+
+  <div class="game-card locked">
+    <div class="icon">🔢</div>
+    <h2>2048</h2>
+    <p>Combina números iguales para llegar a la casilla 2048.</p>
+    <span class="cta">Próximamente</span>
+  </div>
+</div>
+
+<footer>Tus puntajes se guardan en este navegador, juego por juego.</footer>
+
+</body>
+</html>

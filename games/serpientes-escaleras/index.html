@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Serpientes y Escaleras · Consola</title>
+<style>
+  :root {
+    --bg1: #1e1b4b;
+    --bg2: #4c1d95;
+    --accent: #f472b6;
+    --accent2: #a855f7;
+    --text: #f5f3ff;
+    --panel: rgba(255,255,255,0.08);
+    --panel-border: rgba(255,255,255,0.15);
+    --cell-light: rgba(255,255,255,0.05);
+    --cell-dark: rgba(255,255,255,0.02);
+    --ladder: #d9a441;
+    --ladder-dark: #92620f;
+    --ladder-light: #f3d78a;
+    --snake: #4ade80;
+    --snake-dark: #15803d;
+    --snake-belly: #fde68a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: radial-gradient(circle at 20% 20%, var(--bg2), var(--bg1) 70%);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 12px 60px;
+  }
+  .top-bar {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 8px;
+  }
+  .back-link {
+    color: var(--text);
+    text-decoration: none;
+    opacity: 0.75;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--panel-border);
+    background: var(--panel);
+  }
+  .back-link:hover { opacity: 1; background: rgba(255,255,255,0.18); }
+
+  h1 {
+    margin: 6px 0 2px;
+    font-size: 1.8rem;
+    letter-spacing: 0.5px;
+    text-shadow: 0 2px 12px rgba(244,114,182,0.5);
+  }
+  .subtitle { opacity: 0.75; margin-bottom: 16px; font-size: 0.85rem; text-align: center; }
+
+  .setup {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    padding: 12px 16px;
+    border-radius: 16px;
+    margin-bottom: 14px;
+    backdrop-filter: blur(6px);
+  }
+  .control-group { display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; opacity: 0.85; }
+  select, button {
+    font-family: inherit;
+    font-size: 0.9rem;
+    border-radius: 10px;
+    border: 1px solid var(--panel-border);
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.1);
+    color: var(--text);
+    cursor: pointer;
+  }
+  select:hover, button:hover { background: rgba(255,255,255,0.18); }
+  button.primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+    font-weight: 600;
+  }
+  button.primary:hover { filter: brightness(1.1); }
+  button:disabled { opacity: 0.4; cursor: default; filter: none; }
+
+  .turn-panel {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 14px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    padding: 10px 18px;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 460px;
+    justify-content: space-between;
+  }
+  .turn-info { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
+  .turn-dot { width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+
+  .die {
+    width: 46px;
+    height: 46px;
+    background: #fff;
+    border-radius: 10px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    padding: 6px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+  }
+  .die.rolling { animation: diceTumble 0.28s linear infinite; }
+  @keyframes diceTumble {
+    0% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(-18deg) scale(1.06); }
+    50% { transform: rotate(12deg) scale(0.95); }
+    75% { transform: rotate(-9deg) scale(1.05); }
+    100% { transform: rotate(0deg) scale(1); }
+  }
+  .pip { width: 8px; height: 8px; border-radius: 50%; background: #1e1b4b; align-self: center; justify-self: center; opacity: 0; }
+  .pip.on { opacity: 1; }
+  .roll-value {
+    min-width: 26px;
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--accent);
+    text-shadow: 0 0 10px rgba(244,114,182,0.5);
+  }
+
+  .name-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    padding: 10px 16px;
+    border-radius: 16px;
+    margin-bottom: 14px;
+    width: 100%;
+    max-width: 460px;
+    justify-content: center;
+  }
+  .name-row { display: flex; align-items: center; gap: 6px; }
+  .name-color { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .name-input {
+    font-family: inherit;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    border: 1px solid var(--panel-border);
+    padding: 5px 8px;
+    background: rgba(255,255,255,0.08);
+    color: var(--text);
+    width: 108px;
+  }
+  .name-input:focus { outline: none; border-color: var(--accent); background: rgba(255,255,255,0.14); }
+  .name-input::placeholder { color: rgba(245,243,255,0.45); }
+
+  .board-wrap {
+    position: relative;
+    width: 400px;
+    max-width: 92vw;
+    aspect-ratio: 1 / 1;
+  }
+  .board {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    grid-template-rows: repeat(10, 1fr);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid var(--panel-border);
+    background: var(--bg1);
+  }
+  .cell {
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.06);
+    font-size: 0.55rem;
+    padding: 2px 3px;
+    opacity: 0.85;
+  }
+  .cell.light { background: var(--cell-light); }
+  .cell.dark { background: var(--cell-dark); }
+  .cell.ladder-start { background: rgba(217,164,65,0.18); }
+  .cell.snake-head { background: rgba(74,222,128,0.18); }
+  .cell.final { background: rgba(244,114,182,0.4); font-weight: 700; }
+
+  svg.overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .tokens-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .token {
+    position: absolute;
+    width: 18px;
+    height: 23px;
+    overflow: visible;
+    transition: left 0.3s cubic-bezier(.34,1.4,.64,1), top 0.3s cubic-bezier(.34,1.4,.64,1);
+    transform: translate(-50%, -68%);
+    filter: drop-shadow(0 3px 3px rgba(0,0,0,0.5));
+  }
+  .token.sliding {
+    transition: left 0.65s cubic-bezier(.22,.85,.3,1.05), top 0.65s cubic-bezier(.22,.85,.3,1.05);
+  }
+  .token.hopping { animation: tokenHop 0.3s ease-out; }
+  @keyframes tokenHop {
+    0% { transform: translate(-50%, -68%) scale(1, 1); }
+    40% { transform: translate(-50%, calc(-68% - 13px)) scale(1.1, 0.9); }
+    100% { transform: translate(-50%, -68%) scale(1, 1); }
+  }
+
+  .step-badge {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.7);
+    pointer-events: none;
+  }
+  .step-badge.pop { animation: stepPop 0.55s ease; }
+  @keyframes stepPop {
+    0% { opacity: 0; transform: translate(-50%, -30%) scale(0.6); }
+    30% { opacity: 1; transform: translate(-50%, -62%) scale(1.15); }
+    100% { opacity: 0; transform: translate(-50%, -85%) scale(1); }
+  }
+
+  .start-cell {
+    width: 400px;
+    max-width: 92vw;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.05);
+    border: 2px dashed var(--panel-border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-top: 12px;
+    min-height: 30px;
+  }
+  .start-cell.empty { display: none; }
+  .start-cell-label { font-size: 0.75rem; opacity: 0.65; white-space: nowrap; flex-shrink: 0; }
+  .start-cell-tokens { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-end; }
+  .start-token-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .token-static { width: 16px; height: 20px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.4)); }
+  .start-token-name {
+    font-size: 0.62rem;
+    opacity: 0.8;
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #log-panel {
+    width: 400px;
+    max-width: 92vw;
+    margin-top: 16px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 14px;
+    padding: 10px 14px;
+    font-size: 0.78rem;
+    max-height: 130px;
+    overflow-y: auto;
+  }
+  #log-panel div { padding: 2px 0; opacity: 0.85; }
+
+  #modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,6,30,0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 16px;
+  }
+  #modal-overlay.show { display: flex; }
+  #win-banner {
+    background: linear-gradient(160deg, rgba(88,35,170,0.97), rgba(30,27,75,0.97));
+    border: 1px solid var(--panel-border);
+    padding: 30px 36px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.55);
+    animation: pop 0.45s cubic-bezier(.24,1.1,.4,1.15);
+    max-width: 90vw;
+  }
+  #win-text { font-size: 1.35rem; font-weight: 700; margin-bottom: 4px; }
+  @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  #confetti-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 200;
+  }
+
+  footer { margin-top: 30px; opacity: 0.4; font-size: 0.75rem; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="top-bar"><a class="back-link" href="../../index.html">&larr; Consola</a></div>
+
+<h1>🐍 Serpientes y Escaleras</h1>
+<div class="subtitle">Sube por las escaleras, evita las serpientes. Cae exacto en la 100 para ganar.</div>
+
+<div class="setup">
+  <div class="control-group">
+    <label for="players-select">Jugadores</label>
+    <select id="players-select">
+      <option value="2" selected>2 jugadores</option>
+      <option value="3">3 jugadores</option>
+      <option value="4">4 jugadores</option>
+    </select>
+  </div>
+  <button class="primary" id="restart-btn">🔁 Nueva partida</button>
+</div>
+
+<div class="name-panel" id="name-panel"></div>
+
+<div class="turn-panel">
+  <div class="turn-info">
+    <span class="turn-dot" id="turn-dot"></span>
+    <span id="turn-text">Turno de Jugador 1</span>
+  </div>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <div class="die" id="die">
+      <div class="pip" data-p="1"></div><div class="pip" data-p="2"></div><div class="pip" data-p="3"></div>
+      <div class="pip" data-p="4"></div><div class="pip" data-p="5"></div><div class="pip" data-p="6"></div>
+      <div class="pip" data-p="7"></div><div class="pip" data-p="8"></div><div class="pip" data-p="9"></div>
+    </div>
+    <div class="roll-value" id="roll-value">–</div>
+    <button class="primary" id="roll-btn">🎲 Lanzar</button>
+  </div>
+</div>
+
+<div class="board-wrap">
+  <div class="board" id="board"></div>
+  <svg class="overlay" id="overlay" viewBox="0 0 400 400"></svg>
+  <div class="tokens-layer" id="tokens-layer"></div>
+</div>
+
+<div class="start-cell" id="start-cell">
+  <span class="start-cell-label">🏁 Salida → casilla 1</span>
+  <div class="start-cell-tokens" id="start-cell-tokens"></div>
+</div>
+
+<div id="log-panel"></div>
+
+<div id="modal-overlay">
+  <div id="win-banner">
+    <div id="win-text"></div>
+    <button class="primary" id="win-restart-btn" style="margin-top:10px;">Jugar de nuevo</button>
+  </div>
+</div>
+<canvas id="confetti-canvas"></canvas>
+
+<footer>Modo pasa y juega: túrnense en el mismo dispositivo.</footer>
+
+<script>
+const BOARD_SIZE = 10;
+const CELL = 40;
+
+const LADDERS = { 1: 38, 4: 14, 9: 31, 21: 42, 28: 84, 36: 44, 51: 67, 71: 91, 78: 98 };
+const SNAKES  = { 17: 7, 54: 34, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 99: 78 };
+
+const PLAYER_COLORS = ['#f472b6', '#38bdf8', '#facc15', '#34d399'];
+const PLAYER_NAMES = ['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4'];
+const TOKEN_OFFSETS = [[-9,-9], [9,-9], [-9,9], [9,9]];
+const customNames = ['', '', '', ''];
+
+const playersSelect = document.getElementById('players-select');
+const board = document.getElementById('board');
+const overlay = document.getElementById('overlay');
+const tokensLayer = document.getElementById('tokens-layer');
+const startCell = document.getElementById('start-cell');
+const startCellTokens = document.getElementById('start-cell-tokens');
+const logPanel = document.getElementById('log-panel');
+const rollBtn = document.getElementById('roll-btn');
+const restartBtn = document.getElementById('restart-btn');
+const winRestartBtn = document.getElementById('win-restart-btn');
+const modalOverlay = document.getElementById('modal-overlay');
+const winBanner = document.getElementById('win-banner');
+const winText = document.getElementById('win-text');
+const turnText = document.getElementById('turn-text');
+const turnDot = document.getElementById('turn-dot');
+const dieEl = document.getElementById('die');
+const rollValueEl = document.getElementById('roll-value');
+const namePanel = document.getElementById('name-panel');
+const confettiCanvas = document.getElementById('confetti-canvas');
+const confettiCtx = confettiCanvas.getContext('2d');
+const pips = [...dieEl.querySelectorAll('.pip')];
+
+function getPlayerName(i) {
+  return (customNames[i] && customNames[i].trim()) ? customNames[i].trim() : PLAYER_NAMES[i];
+}
+
+function renderNameInputs() {
+  const numPlayers = Number(playersSelect.value);
+  namePanel.innerHTML = '';
+  for (let i = 0; i < numPlayers; i++) {
+    const row = document.createElement('div');
+    row.className = 'name-row';
+    const dot = document.createElement('span');
+    dot.className = 'name-color';
+    dot.style.background = PLAYER_COLORS[i];
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'name-input';
+    input.maxLength = 14;
+    input.placeholder = PLAYER_NAMES[i];
+    input.value = customNames[i];
+    input.addEventListener('input', () => { customNames[i] = input.value; });
+    row.appendChild(dot);
+    row.appendChild(input);
+    namePanel.appendChild(row);
+  }
+}
+
+const PIP_LAYOUT = {
+  1: [5],
+  2: [1, 9],
+  3: [1, 5, 9],
+  4: [1, 3, 7, 9],
+  5: [1, 3, 5, 7, 9],
+  6: [1, 3, 4, 6, 7, 9],
+};
+
+function setDieFace(value) {
+  const active = new Set(PIP_LAYOUT[value] || []);
+  pips.forEach(p => {
+    const n = Number(p.dataset.p);
+    p.classList.toggle('on', active.has(n));
+  });
+}
+
+function cellPosition(n) {
+  const idx = n - 1;
+  const rowFromBottom = Math.floor(idx / BOARD_SIZE);
+  const colInRow = idx % BOARD_SIZE;
+  const col = rowFromBottom % 2 === 0 ? colInRow : (BOARD_SIZE - 1 - colInRow);
+  const gridRow = BOARD_SIZE - rowFromBottom;
+  const gridCol = col + 1;
+  return { gridRow, gridCol };
+}
+
+function cellCenterPx(n) {
+  const { gridRow, gridCol } = cellPosition(n);
+  return {
+    x: (gridCol - 1) * CELL + CELL / 2,
+    y: (gridRow - 1) * CELL + CELL / 2,
+  };
+}
+
+function buildBoardCells() {
+  board.innerHTML = '';
+  for (let n = 1; n <= 100; n++) {
+    const { gridRow, gridCol } = cellPosition(n);
+    const cell = document.createElement('div');
+    const checker = (gridRow + gridCol) % 2 === 0 ? 'light' : 'dark';
+    cell.className = `cell ${checker}`;
+    cell.style.gridRow = gridRow;
+    cell.style.gridColumn = gridCol;
+    cell.textContent = n;
+    if (n === 100) cell.classList.add('final');
+    if (LADDERS[n]) cell.classList.add('ladder-start');
+    if (SNAKES[n]) cell.classList.add('snake-head');
+    board.appendChild(cell);
+  }
+}
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+function svgEl(tag, attrs) {
+  const el = document.createElementNS(SVG_NS, tag);
+  Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+  return el;
+}
+
+function smoothPathD(points) {
+  if (points.length < 2) return '';
+  let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+  for (let i = 1; i < points.length - 1; i++) {
+    const midX = (points[i].x + points[i + 1].x) / 2;
+    const midY = (points[i].y + points[i + 1].y) / 2;
+    d += ` Q ${points[i].x.toFixed(1)} ${points[i].y.toFixed(1)} ${midX.toFixed(1)} ${midY.toFixed(1)}`;
+  }
+  const last = points[points.length - 1];
+  d += ` L ${last.x.toFixed(1)} ${last.y.toFixed(1)}`;
+  return d;
+}
+
+function drawOverlay() {
+  overlay.innerHTML = '';
+  let i = 0;
+  Object.entries(LADDERS).forEach(([start, end]) => {
+    drawLadder(Number(start), Number(end), i++);
+  });
+  Object.entries(SNAKES).forEach(([start, end]) => {
+    drawSnake(Number(start), Number(end), i++);
+  });
+}
+
+function drawLadder(bottom, top) {
+  const p1 = cellCenterPx(bottom);
+  const p2 = cellCenterPx(top);
+  const dx = p2.x - p1.x, dy = p2.y - p1.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len, uy = dy / len;
+  const perpX = -uy, perpY = ux;
+  const railGap = 5.5;
+
+  const rail1 = [{ x: p1.x + perpX * railGap, y: p1.y + perpY * railGap }, { x: p2.x + perpX * railGap, y: p2.y + perpY * railGap }];
+  const rail2 = [{ x: p1.x - perpX * railGap, y: p1.y - perpY * railGap }, { x: p2.x - perpX * railGap, y: p2.y - perpY * railGap }];
+
+  const group = svgEl('g', {});
+
+  [rail1, rail2].forEach(([a, b]) => {
+    group.appendChild(svgEl('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: 'var(--ladder-dark)', 'stroke-width': 4.5, 'stroke-linecap': 'round' }));
+    group.appendChild(svgEl('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: 'var(--ladder)', 'stroke-width': 2.6, 'stroke-linecap': 'round' }));
+  });
+
+  const rungCount = Math.max(3, Math.round(len / 15));
+  for (let r = 0; r <= rungCount; r++) {
+    const t = r / rungCount;
+    const a = { x: rail1[0].x + (rail1[1].x - rail1[0].x) * t, y: rail1[0].y + (rail1[1].y - rail1[0].y) * t };
+    const b = { x: rail2[0].x + (rail2[1].x - rail2[0].x) * t, y: rail2[0].y + (rail2[1].y - rail2[0].y) * t };
+    group.appendChild(svgEl('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: 'var(--ladder-dark)', 'stroke-width': 2.6, 'stroke-linecap': 'round' }));
+  }
+
+  overlay.appendChild(group);
+}
+
+function drawSnake(head, tail, index) {
+  const p1 = cellCenterPx(head);
+  const p2 = cellCenterPx(tail);
+  const dx = p2.x - p1.x, dy = p2.y - p1.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len, uy = dy / len;
+  const perpX = -uy, perpY = ux;
+
+  const segments = Math.max(8, Math.round(len / 13));
+  const waves = 2 + (index % 2);
+  const amplitude = 12;
+  const points = [];
+  for (let s = 0; s <= segments; s++) {
+    const t = s / segments;
+    const taper = Math.sin(Math.min(t * 1.08, 1) * Math.PI);
+    const off = Math.sin(t * Math.PI * waves) * amplitude * taper;
+    points.push({ x: p1.x + dx * t + perpX * off, y: p1.y + dy * t + perpY * off });
+  }
+
+  const group = svgEl('g', {});
+  const d = smoothPathD(points);
+
+  group.appendChild(svgEl('path', { d, stroke: 'var(--snake-dark)', 'stroke-width': 8.4, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+  group.appendChild(svgEl('path', { d, stroke: 'var(--snake)', 'stroke-width': 5.8, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+  group.appendChild(svgEl('path', { d, stroke: 'var(--snake-belly)', 'stroke-width': 1.7, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: 0.65 }));
+
+  for (let s = 2; s < points.length - 2; s += 3) {
+    const pt = points[s];
+    const prev = points[s - 1], next = points[s + 1];
+    const tl = Math.hypot(next.x - prev.x, next.y - prev.y) || 1;
+    const tux = (next.x - prev.x) / tl, tuy = (next.y - prev.y) / tl;
+    const tpx = -tuy, tpy = tux;
+    const size = 3.6;
+    const pTop = { x: pt.x + tux * size, y: pt.y + tuy * size };
+    const pBottom = { x: pt.x - tux * size, y: pt.y - tuy * size };
+    const pLeft = { x: pt.x + tpx * size * 0.85, y: pt.y + tpy * size * 0.85 };
+    const pRight = { x: pt.x - tpx * size * 0.85, y: pt.y - tpy * size * 0.85 };
+    group.appendChild(svgEl('polygon', {
+      points: `${pTop.x.toFixed(1)},${pTop.y.toFixed(1)} ${pLeft.x.toFixed(1)},${pLeft.y.toFixed(1)} ${pBottom.x.toFixed(1)},${pBottom.y.toFixed(1)} ${pRight.x.toFixed(1)},${pRight.y.toFixed(1)}`,
+      fill: 'var(--snake-dark)', opacity: 0.35,
+    }));
+  }
+
+  const last = points[points.length - 1];
+  const beforeLast = points[points.length - 2];
+  const tdx = last.x - beforeLast.x, tdy = last.y - beforeLast.y;
+  const tl2 = Math.hypot(tdx, tdy) || 1;
+  const ttx = tdx / tl2, tty = tdy / tl2;
+  const ttpx = -tty, ttpy = ttx;
+  const tailTip = { x: p2.x + ttx * 6.5, y: p2.y + tty * 6.5 };
+  const tailBaseL = { x: p2.x + ttpx * 3, y: p2.y + ttpy * 3 };
+  const tailBaseR = { x: p2.x - ttpx * 3, y: p2.y - ttpy * 3 };
+  group.appendChild(svgEl('polygon', {
+    points: `${tailTip.x.toFixed(1)},${tailTip.y.toFixed(1)} ${tailBaseL.x.toFixed(1)},${tailBaseL.y.toFixed(1)} ${tailBaseR.x.toFixed(1)},${tailBaseR.y.toFixed(1)}`,
+    fill: 'var(--snake-dark)',
+  }));
+
+  const headDirX = -ux, headDirY = -uy;
+  const angleDeg = (Math.atan2(headDirY, headDirX) * 180) / Math.PI;
+  const headGroup = svgEl('g', { transform: `translate(${p1.x.toFixed(1)} ${p1.y.toFixed(1)}) rotate(${angleDeg.toFixed(1)})` });
+  headGroup.appendChild(svgEl('path', {
+    d: 'M -4.6,-3.6 C -1,-5.6 4,-4.6 5.8,0 C 4,4.6 -1,5.6 -4.6,3.6 C -5.6,1.6 -5.6,-1.6 -4.6,-3.6 Z',
+    fill: 'var(--snake)', stroke: 'var(--snake-dark)', 'stroke-width': 1,
+  }));
+  headGroup.appendChild(svgEl('circle', { cx: 1.4, cy: -2.2, r: 1.3, fill: 'white' }));
+  headGroup.appendChild(svgEl('circle', { cx: 1.4, cy: -2.2, r: 0.65, fill: '#111' }));
+  headGroup.appendChild(svgEl('circle', { cx: 1.4, cy: 2.2, r: 1.3, fill: 'white' }));
+  headGroup.appendChild(svgEl('circle', { cx: 1.4, cy: 2.2, r: 0.65, fill: '#111' }));
+  headGroup.appendChild(svgEl('path', {
+    d: 'M 5.8,0 L 9.6,0 L 11.4,-1.7 M 9.6,0 L 11.4,1.7',
+    stroke: '#ef4444', 'stroke-width': 0.9, fill: 'none', 'stroke-linecap': 'round',
+  }));
+  group.appendChild(headGroup);
+
+  overlay.appendChild(group);
+}
+
+function tokenSvgMarkup(color) {
+  return `
+    <ellipse cx="10" cy="23.5" rx="6" ry="1.6" fill="rgba(0,0,0,0.35)"/>
+    <path d="M5.7,21 C5.4,15 7,12.4 10,12.4 C13,12.4 14.6,15 14.3,21 C14.1,22.4 12.4,23.2 10,23.2 C7.6,23.2 5.9,22.4 5.7,21 Z"
+          fill="${color}" stroke="rgba(0,0,0,0.35)" stroke-width="0.6"/>
+    <circle cx="10" cy="7.2" r="4.4" fill="${color}" stroke="rgba(0,0,0,0.35)" stroke-width="0.6"/>
+    <ellipse cx="8.3" cy="5.6" rx="1.5" ry="1" fill="rgba(255,255,255,0.55)"/>
+  `;
+}
+
+function createTokenSVG(color) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 20 26');
+  svg.classList.add('token');
+  svg.innerHTML = tokenSvgMarkup(color);
+  return svg;
+}
+
+function createStaticTokenIcon(color) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 20 26');
+  svg.classList.add('token-static');
+  svg.innerHTML = tokenSvgMarkup(color);
+  return svg;
+}
+
+let state = null;
+
+function initState() {
+  const numPlayers = Number(playersSelect.value);
+  return {
+    numPlayers,
+    positions: Array(numPlayers).fill(0),
+    current: 0,
+    consecutiveSixes: 0,
+    rolling: false,
+    finished: false,
+  };
+}
+
+function log(msg) {
+  const div = document.createElement('div');
+  div.textContent = msg;
+  logPanel.prepend(div);
+}
+
+const tokenElements = {};
+
+function ensureTokenElement(playerIdx) {
+  if (!tokenElements[playerIdx]) {
+    const tok = createTokenSVG(PLAYER_COLORS[playerIdx]);
+    tokenElements[playerIdx] = tok;
+  }
+  return tokenElements[playerIdx];
+}
+
+function clearAllTokens() {
+  Object.values(tokenElements).forEach(el => el.remove());
+  Object.keys(tokenElements).forEach(k => delete tokenElements[k]);
+}
+
+function renderTokens() {
+  startCellTokens.innerHTML = '';
+
+  state.positions.forEach((pos, i) => {
+    if (pos === 0 && tokenElements[i]) {
+      tokenElements[i].remove();
+      delete tokenElements[i];
+    }
+  });
+
+  const grouped = {};
+  state.positions.forEach((pos, i) => {
+    if (pos === 0) return;
+    grouped[pos] = grouped[pos] || [];
+    grouped[pos].push(i);
+  });
+
+  Object.entries(grouped).forEach(([pos, playerIdxs]) => {
+    const { x, y } = cellCenterPx(Number(pos));
+    playerIdxs.forEach((pIdx, k) => {
+      const off = playerIdxs.length === 1 ? [0, 0] : TOKEN_OFFSETS[k % TOKEN_OFFSETS.length];
+      const tok = ensureTokenElement(pIdx);
+      if (!tok.isConnected) tokensLayer.appendChild(tok);
+      tok.style.left = `${x + off[0]}px`;
+      tok.style.top = `${y + off[1]}px`;
+    });
+  });
+
+  let anyWaiting = false;
+  state.positions.forEach((pos, i) => {
+    if (pos !== 0) return;
+    anyWaiting = true;
+    const wrap = document.createElement('div');
+    wrap.className = 'start-token-wrap';
+    wrap.appendChild(createStaticTokenIcon(PLAYER_COLORS[i]));
+    const label = document.createElement('span');
+    label.className = 'start-token-name';
+    label.textContent = getPlayerName(i);
+    wrap.appendChild(label);
+    startCellTokens.appendChild(wrap);
+  });
+  startCell.classList.toggle('empty', !anyWaiting);
+}
+
+function showStepBadge(playerIdx, stepNum, cellNum) {
+  let badge = document.getElementById('step-badge');
+  if (!badge) {
+    badge = document.createElement('div');
+    badge.id = 'step-badge';
+    badge.className = 'step-badge';
+    tokensLayer.appendChild(badge);
+  }
+  const { x, y } = cellCenterPx(cellNum);
+  badge.style.left = `${x}px`;
+  badge.style.top = `${y - 24}px`;
+  badge.style.color = PLAYER_COLORS[playerIdx];
+  badge.textContent = `+${stepNum}`;
+  badge.classList.remove('pop');
+  void badge.offsetWidth;
+  badge.classList.add('pop');
+}
+
+function hideStepBadge() {
+  const badge = document.getElementById('step-badge');
+  if (badge) badge.remove();
+}
+
+function updateTurnPanel() {
+  turnDot.style.background = PLAYER_COLORS[state.current];
+  turnDot.style.color = PLAYER_COLORS[state.current];
+  turnText.textContent = `Turno de ${getPlayerName(state.current)}`;
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function animateDieRoll(finalValue) {
+  dieEl.classList.add('rolling');
+  rollValueEl.textContent = '…';
+  const cycles = 10;
+  for (let i = 0; i < cycles; i++) {
+    setDieFace(1 + Math.floor(Math.random() * 6));
+    await sleep(65);
+  }
+  dieEl.classList.remove('rolling');
+  setDieFace(finalValue);
+  rollValueEl.textContent = finalValue;
+}
+
+async function movePlayerStepByStep(playerIdx, from, to) {
+  for (let p = from + 1; p <= to; p++) {
+    state.positions[playerIdx] = p;
+    renderTokens();
+    const tok = tokenElements[playerIdx];
+    if (tok) {
+      tok.classList.remove('hopping');
+      void tok.offsetWidth;
+      tok.classList.add('hopping');
+    }
+    showStepBadge(playerIdx, p - from, p);
+    await sleep(320);
+  }
+  hideStepBadge();
+}
+
+async function onRoll() {
+  if (state.rolling || state.finished) return;
+  state.rolling = true;
+  rollBtn.disabled = true;
+
+  const roll = 1 + Math.floor(Math.random() * 6);
+  await animateDieRoll(roll);
+
+  const playerIdx = state.current;
+  const from = state.positions[playerIdx];
+  let target = from + roll;
+
+  if (target > 100) {
+    log(`${getPlayerName(playerIdx)} sacó ${roll} pero se pasa de la 100. No se mueve.`);
+    await sleep(500);
+    endTurn(roll);
+    return;
+  }
+
+  log(`${getPlayerName(playerIdx)} sacó ${roll}.`);
+  await movePlayerStepByStep(playerIdx, from, target);
+  await sleep(150);
+
+  if (LADDERS[target]) {
+    const dest = LADDERS[target];
+    log(`🪜 ¡Escalera! ${getPlayerName(playerIdx)} sube de ${target} a ${dest}.`);
+    const tok = tokenElements[playerIdx];
+    if (tok) tok.classList.add('sliding');
+    await sleep(250);
+    state.positions[playerIdx] = dest;
+    renderTokens();
+    await sleep(700);
+    if (tok) tok.classList.remove('sliding');
+    target = dest;
+  } else if (SNAKES[target]) {
+    const dest = SNAKES[target];
+    log(`🐍 ¡Serpiente! ${getPlayerName(playerIdx)} baja de ${target} a ${dest}.`);
+    const tok = tokenElements[playerIdx];
+    if (tok) tok.classList.add('sliding');
+    await sleep(250);
+    state.positions[playerIdx] = dest;
+    renderTokens();
+    await sleep(700);
+    if (tok) tok.classList.remove('sliding');
+    target = dest;
+  }
+
+  if (target === 100) {
+    state.finished = true;
+    winText.textContent = `🏆 ¡${getPlayerName(playerIdx)} gana la partida!`;
+    modalOverlay.classList.add('show');
+    launchConfetti();
+    state.rolling = false;
+    rollBtn.disabled = true;
+    return;
+  }
+
+  endTurn(roll);
+}
+
+function endTurn(roll) {
+  if (roll === 6) {
+    state.consecutiveSixes++;
+    if (state.consecutiveSixes >= 3) {
+      log(`${getPlayerName(state.current)} sacó tres 6 seguidos, pierde el turno.`);
+      state.consecutiveSixes = 0;
+      state.current = (state.current + 1) % state.numPlayers;
+    } else {
+      log(`${getPlayerName(state.current)} sacó 6, ¡tira otra vez!`);
+    }
+  } else {
+    state.consecutiveSixes = 0;
+    state.current = (state.current + 1) % state.numPlayers;
+  }
+  updateTurnPanel();
+  state.rolling = false;
+  rollBtn.disabled = false;
+}
+
+let confettiAnimId = null;
+
+function resizeConfettiCanvas() {
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeConfettiCanvas);
+
+function launchConfetti() {
+  resizeConfettiCanvas();
+  const colors = ['#f472b6', '#38bdf8', '#facc15', '#34d399', '#a855f7', '#fb7185'];
+  const pieces = Array.from({ length: 180 }, () => ({
+    x: Math.random() * confettiCanvas.width,
+    y: -20 - Math.random() * confettiCanvas.height * 0.6,
+    w: 6 + Math.random() * 6,
+    h: 8 + Math.random() * 10,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    speedY: 2 + Math.random() * 3,
+    speedX: -1.5 + Math.random() * 3,
+    rotation: Math.random() * 360,
+    rotationSpeed: -8 + Math.random() * 16,
+  }));
+
+  const start = performance.now();
+  const duration = 4000;
+
+  function frame(now) {
+    const elapsed = now - start;
+    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    pieces.forEach(p => {
+      p.x += p.speedX;
+      p.y += p.speedY;
+      p.rotation += p.rotationSpeed;
+      confettiCtx.save();
+      confettiCtx.translate(p.x, p.y);
+      confettiCtx.rotate((p.rotation * Math.PI) / 180);
+      confettiCtx.fillStyle = p.color;
+      confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      confettiCtx.restore();
+    });
+    if (elapsed < duration) {
+      confettiAnimId = requestAnimationFrame(frame);
+    } else {
+      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      confettiAnimId = null;
+    }
+  }
+  if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+  confettiAnimId = requestAnimationFrame(frame);
+}
+
+function stopConfetti() {
+  if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+  confettiAnimId = null;
+  confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+}
+
+function newGame() {
+  clearAllTokens();
+  hideStepBadge();
+  stopConfetti();
+  state = initState();
+  modalOverlay.classList.remove('show');
+  logPanel.innerHTML = '';
+  rollBtn.disabled = false;
+  rollValueEl.textContent = '–';
+  updateTurnPanel();
+  renderTokens();
+  log('Nueva partida. ¡Buena suerte a todos!');
+}
+
+function onPlayersChange() {
+  renderNameInputs();
+  newGame();
+}
+
+buildBoardCells();
+drawOverlay();
+renderNameInputs();
+rollBtn.addEventListener('click', onRoll);
+restartBtn.addEventListener('click', newGame);
+winRestartBtn.addEventListener('click', newGame);
+playersSelect.addEventListener('change', onPlayersChange);
+
+setDieFace(1);
+newGame();
+</script>
+</body>
+</html>

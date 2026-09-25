@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memoria · Consola</title>
+<style>
+  :root {
+    --bg1: #1e1b4b;
+    --bg2: #4c1d95;
+    --card-back: #6d28d9;
+    --card-back-2: #8b5cf6;
+    --accent: #f472b6;
+    --text: #f5f3ff;
+    --panel: rgba(255,255,255,0.08);
+    --panel-border: rgba(255,255,255,0.15);
+    --good: #34d399;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: radial-gradient(circle at 20% 20%, var(--bg2), var(--bg1) 70%);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 12px 60px;
+  }
+  .top-bar {
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 8px;
+  }
+  .back-link {
+    color: var(--text);
+    text-decoration: none;
+    opacity: 0.75;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--panel-border);
+    background: var(--panel);
+  }
+  .back-link:hover { opacity: 1; background: rgba(255,255,255,0.18); }
+
+  h1 {
+    margin: 8px 0 4px;
+    font-size: 2rem;
+    letter-spacing: 1px;
+    text-shadow: 0 2px 12px rgba(244,114,182,0.5);
+  }
+  .subtitle { opacity: 0.75; margin-bottom: 20px; font-size: 0.9rem; }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    padding: 14px 18px;
+    border-radius: 16px;
+    margin-bottom: 18px;
+    backdrop-filter: blur(6px);
+  }
+  .control-group { display: flex; flex-direction: column; gap: 4px; font-size: 0.75rem; opacity: 0.85; }
+  select, button {
+    font-family: inherit;
+    font-size: 0.9rem;
+    border-radius: 10px;
+    border: 1px solid var(--panel-border);
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.1);
+    color: var(--text);
+    cursor: pointer;
+  }
+  select:hover, button:hover { background: rgba(255,255,255,0.18); }
+  button.primary {
+    background: linear-gradient(135deg, var(--accent), #a855f7);
+    border: none;
+    font-weight: 600;
+    align-self: flex-end;
+  }
+  button.primary:hover { filter: brightness(1.1); }
+
+  .stats {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 18px;
+    font-size: 0.95rem;
+  }
+  .stat { text-align: center; }
+  .stat .value { font-size: 1.4rem; font-weight: 700; }
+  .stat .label { font-size: 0.7rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  #board {
+    display: grid;
+    gap: 10px;
+    justify-content: center;
+    perspective: 1000px;
+  }
+  .card {
+    position: relative;
+    width: 78px;
+    height: 78px;
+    cursor: pointer;
+    transform-style: preserve-3d;
+    transition: transform 0.45s cubic-bezier(.2,.8,.2,1);
+  }
+  .card.flipped, .card.matched { transform: rotateY(180deg); }
+  .card-face {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    backface-visibility: hidden;
+    font-size: 2rem;
+  }
+  .card-back {
+    background: linear-gradient(135deg, var(--card-back), var(--card-back-2));
+    box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+  }
+  .card-back::after {
+    content: '?';
+    opacity: 0.5;
+    font-size: 1.6rem;
+    font-weight: 700;
+  }
+  .card-front {
+    background: #fff;
+    color: #1e1b4b;
+    transform: rotateY(180deg);
+  }
+  .card.matched .card-front {
+    background: var(--good);
+    color: white;
+  }
+  .card:not(.flipped):not(.matched):hover .card-back { filter: brightness(1.15); }
+
+  #modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,6,30,0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 16px;
+  }
+  #modal-overlay.show { display: flex; }
+  #win-banner {
+    background: linear-gradient(160deg, rgba(88,35,170,0.97), rgba(30,27,75,0.97));
+    border: 1px solid var(--panel-border);
+    padding: 30px 36px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.55);
+    animation: pop 0.45s cubic-bezier(.24,1.1,.4,1.15);
+    max-width: 90vw;
+  }
+  #win-text { font-size: 1.35rem; font-weight: 700; margin-bottom: 4px; }
+  @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  #confetti-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 200;
+  }
+
+  footer { margin-top: 30px; opacity: 0.4; font-size: 0.75rem; }
+</style>
+</head>
+<body>
+
+<div class="top-bar"><a class="back-link" href="../../index.html">&larr; Consola</a></div>
+
+<h1>🧠 Memoria</h1>
+<div class="subtitle">Encuentra todas las parejas con el menor número de movimientos</div>
+
+<div class="controls">
+  <div class="control-group">
+    <label for="theme-select">Tema</label>
+    <select id="theme-select"></select>
+  </div>
+  <div class="control-group">
+    <label for="difficulty-select">Dificultad</label>
+    <select id="difficulty-select">
+      <option value="4x3">Fácil (4×3)</option>
+      <option value="4x4" selected>Normal (4×4)</option>
+      <option value="6x4">Difícil (6×4)</option>
+      <option value="6x6">Experto (6×6)</option>
+    </select>
+  </div>
+  <button class="primary" id="restart-btn">🔁 Nueva partida</button>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="value" id="stat-moves">0</div><div class="label">Movimientos</div></div>
+  <div class="stat"><div class="value" id="stat-time">00:00</div><div class="label">Tiempo</div></div>
+  <div class="stat"><div class="value" id="stat-best">--</div><div class="label">Mejor (mov.)</div></div>
+</div>
+
+<div id="board"></div>
+
+<div id="modal-overlay">
+  <div id="win-banner">
+    <div id="win-text"></div>
+    <button class="primary" id="win-restart-btn" style="margin-top:10px;">Jugar de nuevo</button>
+  </div>
+</div>
+<canvas id="confetti-canvas"></canvas>
+
+<footer>Hecho con cariño • tus mejores puntajes se guardan en este navegador</footer>
+
+<script>
+const THEMES = {
+  emoji: { name: 'Animales', icons: ['🐶','🐱','🦊','🐼','🦁','🐸','🐵','🐷','🐰','🐨','🦄','🐯','🐮','🐔','🦉','🐙','🦋','🐢'] },
+  frutas: { name: 'Frutas', icons: ['🍎','🍌','🍇','🍉','🍓','🍍','🥝','🍑','🍒','🍋','🥭','🍐','🥑','🍈','🍅','🥥'] },
+  espacio: { name: 'Espacio', icons: ['🚀','🪐','🌟','☄️','🌙','👽','🛸','🌌','⭐','🔭','🌠','☀️','🌍','🧑‍🚀'] },
+  colores: { name: 'Formas de color', icons: ['🔴','🟠','🟡','🟢','🔵','🟣','🟤','⚫','⚪','🟥','🟧','🟨','🟩','🟦','🟪','🟫'] },
+};
+
+const themeSelect = document.getElementById('theme-select');
+const difficultySelect = document.getElementById('difficulty-select');
+const board = document.getElementById('board');
+const statMoves = document.getElementById('stat-moves');
+const statTime = document.getElementById('stat-time');
+const statBest = document.getElementById('stat-best');
+const modalOverlay = document.getElementById('modal-overlay');
+const winBanner = document.getElementById('win-banner');
+const winText = document.getElementById('win-text');
+const confettiCanvas = document.getElementById('confetti-canvas');
+const confettiCtx = confettiCanvas.getContext('2d');
+let confettiAnimId = null;
+
+function resizeConfettiCanvas() {
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeConfettiCanvas);
+
+function launchConfetti() {
+  resizeConfettiCanvas();
+  const colors = ['#f472b6', '#38bdf8', '#facc15', '#34d399', '#a855f7', '#fb7185'];
+  const pieces = Array.from({ length: 180 }, () => ({
+    x: Math.random() * confettiCanvas.width,
+    y: -20 - Math.random() * confettiCanvas.height * 0.6,
+    w: 6 + Math.random() * 6,
+    h: 8 + Math.random() * 10,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    speedY: 2 + Math.random() * 3,
+    speedX: -1.5 + Math.random() * 3,
+    rotation: Math.random() * 360,
+    rotationSpeed: -8 + Math.random() * 16,
+  }));
+
+  const start = performance.now();
+  const duration = 4000;
+
+  function frame(now) {
+    const elapsed = now - start;
+    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    pieces.forEach(p => {
+      p.x += p.speedX;
+      p.y += p.speedY;
+      p.rotation += p.rotationSpeed;
+      confettiCtx.save();
+      confettiCtx.translate(p.x, p.y);
+      confettiCtx.rotate((p.rotation * Math.PI) / 180);
+      confettiCtx.fillStyle = p.color;
+      confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      confettiCtx.restore();
+    });
+    if (elapsed < duration) {
+      confettiAnimId = requestAnimationFrame(frame);
+    } else {
+      confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      confettiAnimId = null;
+    }
+  }
+  if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+  confettiAnimId = requestAnimationFrame(frame);
+}
+
+function stopConfetti() {
+  if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+  confettiAnimId = null;
+  confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+}
+
+Object.entries(THEMES).forEach(([key, t]) => {
+  const opt = document.createElement('option');
+  opt.value = key;
+  opt.textContent = t.name;
+  themeSelect.appendChild(opt);
+});
+
+let state = {
+  cards: [],
+  flipped: [],
+  matchedCount: 0,
+  moves: 0,
+  timer: null,
+  seconds: 0,
+  lock: false,
+  started: false,
+};
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function getDims() {
+  const [cols, rows] = difficultySelect.value.split('x').map(Number);
+  return { cols, rows };
+}
+
+function bestKey() {
+  return `memoria-best-${themeSelect.value}-${difficultySelect.value}`;
+}
+
+function loadBest() {
+  try {
+    const v = localStorage.getItem(bestKey());
+    statBest.textContent = v ? v : '--';
+  } catch (e) {
+    statBest.textContent = '--';
+  }
+}
+
+function saveBestIfNeeded(moves) {
+  try {
+    const key = bestKey();
+    const current = localStorage.getItem(key);
+    if (!current || moves < Number(current)) {
+      localStorage.setItem(key, String(moves));
+    }
+  } catch (e) {
+    // localStorage no disponible (p.ej. navegación privada o vista previa)
+  }
+  loadBest();
+}
+
+function formatTime(s) {
+  const m = String(Math.floor(s / 60)).padStart(2, '0');
+  const sec = String(s % 60).padStart(2, '0');
+  return `${m}:${sec}`;
+}
+
+function startTimer() {
+  stopTimer();
+  state.seconds = 0;
+  statTime.textContent = formatTime(0);
+  state.timer = setInterval(() => {
+    state.seconds++;
+    statTime.textContent = formatTime(state.seconds);
+  }, 1000);
+}
+
+function stopTimer() {
+  if (state.timer) clearInterval(state.timer);
+  state.timer = null;
+}
+
+function buildBoard() {
+  stopTimer();
+  stopConfetti();
+  modalOverlay.classList.remove('show');
+  const { cols, rows } = getDims();
+  const totalCards = cols * rows;
+  const pairsNeeded = totalCards / 2;
+  const theme = THEMES[themeSelect.value];
+  const icons = shuffle(theme.icons).slice(0, pairsNeeded);
+  const deck = shuffle([...icons, ...icons]).map((icon, i) => ({
+    id: i, icon, flipped: false, matched: false,
+  }));
+
+  state = { cards: deck, flipped: [], matchedCount: 0, moves: 0, timer: null, seconds: 0, lock: false, started: false };
+  statMoves.textContent = '0';
+  statTime.textContent = '00:00';
+  loadBest();
+
+  board.style.gridTemplateColumns = `repeat(${cols}, 78px)`;
+  board.style.width = '100%';
+  board.innerHTML = '';
+
+  deck.forEach(card => {
+    const el = document.createElement('div');
+    el.className = 'card';
+    el.dataset.id = card.id;
+    el.innerHTML = `
+      <div class="card-face card-back"></div>
+      <div class="card-face card-front">${card.icon}</div>
+    `;
+    el.addEventListener('click', () => onCardClick(card.id, el));
+    board.appendChild(el);
+  });
+}
+
+function onCardClick(id, el) {
+  if (state.lock) return;
+  const card = state.cards.find(c => c.id === id);
+  if (!card || card.flipped || card.matched) return;
+
+  if (!state.started) {
+    state.started = true;
+    startTimer();
+  }
+
+  card.flipped = true;
+  el.classList.add('flipped');
+  state.flipped.push({ card, el });
+
+  if (state.flipped.length === 2) {
+    state.moves++;
+    statMoves.textContent = state.moves;
+    const [a, b] = state.flipped;
+    if (a.card.icon === b.card.icon) {
+      a.card.matched = true;
+      b.card.matched = true;
+      a.el.classList.add('matched');
+      b.el.classList.add('matched');
+      state.flipped = [];
+      state.matchedCount += 2;
+      if (state.matchedCount === state.cards.length) {
+        onWin();
+      }
+    } else {
+      state.lock = true;
+      setTimeout(() => {
+        a.card.flipped = false;
+        b.card.flipped = false;
+        a.el.classList.remove('flipped');
+        b.el.classList.remove('flipped');
+        state.flipped = [];
+        state.lock = false;
+      }, 800);
+    }
+  }
+}
+
+function onWin() {
+  stopTimer();
+  saveBestIfNeeded(state.moves);
+  winText.textContent = `🎉 ¡Ganaste! ${state.moves} movimientos en ${formatTime(state.seconds)}`;
+  modalOverlay.classList.add('show');
+  launchConfetti();
+}
+
+document.getElementById('restart-btn').addEventListener('click', buildBoard);
+document.getElementById('win-restart-btn').addEventListener('click', buildBoard);
+themeSelect.addEventListener('change', buildBoard);
+difficultySelect.addEventListener('change', buildBoard);
+
+buildBoard();
+</script>
+</body>
+</html>
