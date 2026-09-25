@@ -98,15 +98,25 @@
   .stat .label { font-size: 0.7rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.5px; }
 
   #board {
+    --gap: 10px;
+    --cols: 4;
     display: grid;
-    gap: 10px;
+    gap: var(--gap);
     justify-content: center;
     perspective: 1000px;
+    width: 100%;
+    max-width: 520px;
+  }
+  /* Solo en celulares: menos separación para que quepan 6 columnas */
+  @media (max-width: 560px) {
+    #board[data-cols="6"] { --gap: 6px; }
   }
   .card {
     position: relative;
-    width: 78px;
-    height: 78px;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    /* Tamaño real de la carta, para escalar el emoji */
+    --size: min(78px, (100vw - 24px - (var(--cols) - 1) * var(--gap)) / var(--cols));
     cursor: pointer;
     transform-style: preserve-3d;
     transition: transform 0.45s cubic-bezier(.2,.8,.2,1);
@@ -120,7 +130,8 @@
     justify-content: center;
     border-radius: 12px;
     backface-visibility: hidden;
-    font-size: 2rem;
+    -webkit-backface-visibility: hidden;
+    font-size: min(2rem, calc(var(--size) * 0.45));
   }
   .card-back {
     background: linear-gradient(135deg, var(--card-back), var(--card-back-2));
@@ -129,7 +140,7 @@
   .card-back::after {
     content: '?';
     opacity: 0.5;
-    font-size: 1.6rem;
+    font-size: min(1.6rem, calc(var(--size) * 0.36));
     font-weight: 700;
   }
   .card-front {
@@ -226,9 +237,9 @@
 <script>
 const THEMES = {
   emoji: { name: 'Animales', icons: ['🐶','🐱','🦊','🐼','🦁','🐸','🐵','🐷','🐰','🐨','🦄','🐯','🐮','🐔','🦉','🐙','🦋','🐢'] },
-  frutas: { name: 'Frutas', icons: ['🍎','🍌','🍇','🍉','🍓','🍍','🥝','🍑','🍒','🍋','🥭','🍐','🥑','🍈','🍅','🥥'] },
-  espacio: { name: 'Espacio', icons: ['🚀','🪐','🌟','☄️','🌙','👽','🛸','🌌','⭐','🔭','🌠','☀️','🌍','🧑‍🚀'] },
-  colores: { name: 'Formas de color', icons: ['🔴','🟠','🟡','🟢','🔵','🟣','🟤','⚫','⚪','🟥','🟧','🟨','🟩','🟦','🟪','🟫'] },
+  frutas: { name: 'Frutas', icons: ['🍎','🍌','🍇','🍉','🍓','🍍','🥝','🍑','🍒','🍋','🥭','🍐','🥑','🍈','🍅','🥥','🍊','🫐'] },
+  espacio: { name: 'Espacio', icons: ['🚀','🪐','🌟','☄️','🌙','👽','🛸','🌌','⭐','🔭','🌠','☀️','🌍','🧑‍🚀','🛰️','🌕','🌑','🌞'] },
+  colores: { name: 'Formas de color', icons: ['🔴','🟠','🟡','🟢','🔵','🟣','🟤','⚫','⚪','🟥','🟧','🟨','🟩','🟦','🟪','🟫','🔶','🔷'] },
 };
 
 const themeSelect = document.getElementById('theme-select');
@@ -396,8 +407,10 @@ function buildBoard() {
   statTime.textContent = '00:00';
   loadBest();
 
-  board.style.gridTemplateColumns = `repeat(${cols}, 78px)`;
-  board.style.width = '100%';
+  // Columnas flexibles (máx. 78px) para que el tablero quepa en celulares
+  board.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 78px))`;
+  board.style.setProperty('--cols', cols);
+  board.dataset.cols = cols;
   board.innerHTML = '';
 
   deck.forEach(card => {

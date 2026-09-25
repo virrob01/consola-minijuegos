@@ -497,6 +497,13 @@ function buildBoardCells() {
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
+// El tablero se encoge en pantallas pequeñas: se posiciona en % del tamaño
+// de referencia (BOARD_SIZE * CELL) para que las fichas sigan a las casillas.
+function toPct(v, offPx = 0) {
+  const pct = (v / (BOARD_SIZE * CELL)) * 100;
+  return offPx ? `calc(${pct}% + ${offPx}px)` : `${pct}%`;
+}
+
 function svgEl(tag, attrs) {
   const el = document.createElementNS(SVG_NS, tag);
   Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
@@ -718,8 +725,8 @@ function renderTokens() {
       const off = playerIdxs.length === 1 ? [0, 0] : TOKEN_OFFSETS[k % TOKEN_OFFSETS.length];
       const tok = ensureTokenElement(pIdx);
       if (!tok.isConnected) tokensLayer.appendChild(tok);
-      tok.style.left = `${x + off[0]}px`;
-      tok.style.top = `${y + off[1]}px`;
+      tok.style.left = toPct(x, off[0]);
+      tok.style.top = toPct(y, off[1]);
     });
   });
 
@@ -748,8 +755,8 @@ function showStepBadge(playerIdx, stepNum, cellNum) {
     tokensLayer.appendChild(badge);
   }
   const { x, y } = cellCenterPx(cellNum);
-  badge.style.left = `${x}px`;
-  badge.style.top = `${y - 24}px`;
+  badge.style.left = toPct(x);
+  badge.style.top = toPct(y, -24);
   badge.style.color = PLAYER_COLORS[playerIdx];
   badge.textContent = `+${stepNum}`;
   badge.classList.remove('pop');
