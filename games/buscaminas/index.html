@@ -280,12 +280,32 @@ function stopTimer() {
 let state = null;
 let cellEls = [];
 
+// Tamaño de casilla: el de la dificultad, reducido solo si el tablero no
+// cabe en la pantalla (celulares). En computador queda igual.
+function fitCellSize() {
+  const cfg = DIFFICULTIES[difficultySelect.value];
+  const GAP = 3, BOARD_EXTRA = 16, BODY_PADDING = 24; // gap, padding+borde, márgenes
+  const available = document.documentElement.clientWidth - BODY_PADDING - BOARD_EXTRA - (state.cols - 1) * GAP;
+  return Math.max(14, Math.min(cfg.cell, Math.floor(available / state.cols)));
+}
+
+function resizeBoard() {
+  if (!state) return;
+  const cellSize = fitCellSize();
+  board.style.gridTemplateColumns = `repeat(${state.cols}, ${cellSize}px)`;
+  board.style.gridTemplateRows = `repeat(${state.rows}, ${cellSize}px)`;
+  board.querySelectorAll('.mcell:not(.void)').forEach(el => {
+    el.style.fontSize = `${Math.max(11, cellSize * 0.42)}px`;
+  });
+}
+window.addEventListener('resize', resizeBoard);
+
 function buildBoardDOM() {
   board.innerHTML = '';
   cellEls = [];
-  const cfg = DIFFICULTIES[difficultySelect.value];
-  board.style.gridTemplateColumns = `repeat(${state.cols}, ${cfg.cell}px)`;
-  board.style.gridTemplateRows = `repeat(${state.rows}, ${cfg.cell}px)`;
+  const cellSize = fitCellSize();
+  board.style.gridTemplateColumns = `repeat(${state.cols}, ${cellSize}px)`;
+  board.style.gridTemplateRows = `repeat(${state.rows}, ${cellSize}px)`;
 
   for (let r = 0; r < state.rows; r++) {
     const rowEls = [];
@@ -298,7 +318,7 @@ function buildBoardDOM() {
         continue;
       }
       el.className = 'mcell';
-      el.style.fontSize = `${Math.max(11, cfg.cell * 0.42)}px`;
+      el.style.fontSize = `${Math.max(11, cellSize * 0.42)}px`;
       el.addEventListener('click', () => onCellLeftClick(r, c));
       el.addEventListener('contextmenu', (e) => {
         e.preventDefault();
