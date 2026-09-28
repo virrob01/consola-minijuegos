@@ -1,0 +1,38 @@
+{
+  "serve.ps1": {
+    "mtime": 1790307243.4386163,
+    "seen": 1790554345.1880448,
+    "ast_hash": "bcdebebee377b5d0915099b09248757f",
+    "semantic_hash": "bcdebebee377b5d0915099b09248757f"
+  },
+  "games/buscaminas/index.html": {
+    "mtime": 1790553845.790383,
+    "seen": 1790554345.1880481,
+    "ast_hash": "9a91fdd88da251a83cb483c7bdfbd165",
+    "semantic_hash": "9a91fdd88da251a83cb483c7bdfbd165"
+  },
+  "games/memoria/index.html": {
+    "mtime": 1790553845.790383,
+    "seen": 1790554345.1880496,
+    "ast_hash": "8b43ed7d02ee1f5054f863fbf0b762a8",
+    "semantic_hash": "8b43ed7d02ee1f5054f863fbf0b762a8"
+  },
+  "games/parques/index.html": {
+    "mtime": 1790553845.790383,
+    "seen": 1790554345.188051,
+    "ast_hash": "20bf81c375bcd15f7c4a7f46c22f8b11",
+    "semantic_hash": "20bf81c375bcd15f7c4a7f46c22f8b11"
+  },
+  "games/serpientes-escaleras/index.html": {
+    "mtime": 1790553845.790383,
+    "seen": 1790554345.188052,
+    "ast_hash": "8e634a09b5ebd246c7f85b7e36d92129",
+    "semantic_hash": "8e634a09b5ebd246c7f85b7e36d92129"
+  },
+  "index.html": {
+    "mtime": 1790307243.4386163,
+    "seen": 1790554345.188053,
+    "ast_hash": "52a6af40eaefe1ac3d1b8682455c9244",
+    "semantic_hash": "52a6af40eaefe1ac3d1b8682455c9244"
+  }
+}
